@@ -1,12 +1,11 @@
-Package: data.rnaseq.RatBodymap
+Package: data.rnaseq.RnorBodymap
 Title: Data package for rat bodymap RNA-seq 
 Version: 0.0.0.9000
 Authors@R: 
     person(given = "Trang",
            family = "Tran",
            role = c("aut", "cre"),
-           email = "first.last@example.com",
-           comment = c(ORCID = "YOUR-ORCID-ID"))
+           comment = c(ORCID = "0000-0002-4219-2990"))
 Description: RNA-seq of rat tissues
 License: CC-BY
 Encoding: UTF-8
