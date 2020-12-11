@@ -15,6 +15,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 file.metadata_fastq = 'fastq_metadata.tsv'
 file.metadata_sra = 'PRJNA238328_metadata_cleaned.tsv'
+file.metadata_pub = 'supp_file_1.tsv'
+file.metadata_geo = 'samples_metadata_geo.RDS'
 ```
 
 ## Overview
@@ -81,11 +83,13 @@ tmp = meta1[,setdiff(colnames(meta1),c('RunId', 'Bases', 'Bytes', 'Lane', 'Avera
 meta1.bysample = meta1[!duplicated(tmp),colnames(tmp)]
 str(meta1.bysample)
 
-libnames <- colnames(gene.assayData$exprs) %>% as.character()
-phenoData <- data.frame('BiosampleId' = libnames) %>%
-    plyr::join(y = meta1.bysample, by = 'BiosampleId', type = 'left')  %>%
-    set_rownames(libnames) %>%
-    Biobase::AnnotatedDataFrame(data = ., varMetadata = data.frame('labelDescription' = colnames(.), row.names = colnames(.)))   
+meta2 = read.table(file.path(Sys.getenv('DBDIR'), file.metadata_pub), sep = '\t', header = TRUE)[,c('Sample_ID', 'RNA_Sample_ID', 'ERCC_Mix', 'BarCode', 'RNA_A260.A280_Ratio', 'RNA_RIN' , 'Library_Con_ng.ul')]
+meta2$Sample_title = paste0('SEQC_',meta2$Sample_ID)
+meta2$Sample_ID <- NULL
+meta3 = readRDS(file.path(Sys.getenv('DBDIR'), file.metadata_geo))
+meta123 = plyr::join(meta2,meta3[,c('SampleId', 'Sample_title')]) %>%
+    plyr::join(meta1.bysample, by = 'SampleId', type='left')
+
 ```
 
 Re-processing stats
@@ -93,18 +97,18 @@ Re-processing stats
 ```{r}
 starLog = read.table(file.path(Sys.getenv('DBDIR'), 'star-rsem',
                                'starLog.final.tsv'), sep = '\t',header=TRUE)
-meta2 = data.frame(t(starLog[,-c(1,2)])) %>%
+meta4 = data.frame(t(starLog[,-c(1,2)])) %>%
     set_colnames(paste0('starAlignment.',starLog[[1]])) %>%
     set_rownames(colnames(starLog)[-c(1,2)])
-meta2$BiosampleId = rownames(meta2)
-str(meta2)
+meta4$BiosampleId = rownames(meta4)
+str(meta4)
 ```
 
 ```{r}
 libnames <- colnames(gene.assayData$exprs) %>% as.character()
 allMeta <- data.frame('BiosampleId' = libnames) %>%
-    plyr::join(y = meta1.bysample, by = 'BiosampleId', type = 'left')  %>%
-    plyr::join(y = meta2, by = 'BiosampleId', type = 'left') %>%
+    plyr::join(y = meta123, by = 'BiosampleId', type = 'left')  %>%
+    plyr::join(y = meta4, by = 'BiosampleId', type = 'left') %>%
     set_rownames(libnames)
 colDescription = colnames(allMeta)
 colDescription[grepl('starAlignment', colnames(allMeta))] = starLog[[2]]
