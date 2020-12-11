@@ -1,0 +1,23 @@
+---
+title: "Parsing metadata from SOFT-formatted file (GEO)"
+author: "Trang Tran"
+date: "December 10, 2020"
+output: html_notebook
+---
+
+```{r setup, include=FALSE, echo=FALSE}
+library(magrittr)
+library(ggplot2)
+# Sys.setenv('DBDIR' = 'path/to/data/dir')
+Sys.setenv('DBDIR' = './')
+options(stringsAsFactors = FALSE)
+knitr::opts_chunk$set(echo = TRUE)
+softfile1 = file.path(Sys.getenv('DBDIR'), 'GSE53960_family.soft')
+source('../R/utils.R')
+```
+
+```{r}
+meta_geo = read.soft2dataframe(softfile1, entryType = 'SAMPLE', idColumnName = 'SampleId')
+saveRDS(meta_geo, file = 'samples_metadata_geo.RDS')
+```
+
