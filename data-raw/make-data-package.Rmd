@@ -99,7 +99,7 @@ tmp = meta1[,setdiff(colnames(meta1),c('RunId', 'Bases', 'Bytes', 'Lane', 'Avera
 meta1.bysample = meta1[!duplicated(tmp),colnames(tmp)]
 str(meta1.bysample)
 
-meta2 = read.table(file.path(Sys.getenv('DBDIR'), file.metadata_pub), sep = '\t', header = TRUE)[,c('Sample_ID', 'RNA_Sample_ID', 'ERCC_Mix', 'Barcode', 'RNA_A260.A280_Ratio', 'RNA_RIN' , 'Library_Con_ng.ul')]
+meta2 = read.table(file.path(Sys.getenv('DBDIR'), file.metadata_pub), sep = '\t', header = TRUE)[,c('Sample_ID', 'RNA_Sample_ID', 'ERCC_Mix', 'Barcode', 'RNA_A260.A280_Ratio', 'RNA_RIN' , 'Library_Con_ng.ul', 'Age_Week', 'Organ')]
 meta2$Sample_title = paste0('SEQC_',meta2$Sample_ID)
 meta2$Sample_ID <- NULL
 meta3 = readRDS(file.path(Sys.getenv('DBDIR'), file.metadata_geo))
@@ -128,7 +128,7 @@ allMeta <- data.frame('BiosampleId' = libnames) %>%
     set_rownames(libnames)
 colDescription = colnames(allMeta)
 colDescription[grepl('starAlignment', colnames(allMeta))] = starLog[[2]]
-fields_with_description = which(colnames(allMeta) %in% names(METAFIELD_DESCRIPTION))
+fields_with_description = which(colnames(allMeta) %in% names(METAFIELDS))
 colDescription[fields_with_description] = METAFIELDS[colDescription[fields_with_description], 'description']
 for (f in colnames(allMeta)) {
     if(!is.na(METAFIELDS[f,'type'])) {
