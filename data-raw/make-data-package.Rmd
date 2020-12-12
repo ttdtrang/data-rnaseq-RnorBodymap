@@ -75,6 +75,22 @@ gene.featureData = gene.featureData %>%
 Biosample metadata
 
 ```{r}
+METAFIELDS = data.frame(
+    'name' = c('BiosampleId', 'SampleId', 'Library_Con_ng.ul', 'RNA_RIN', 'RNA_A260.A280_Ratio', 'Barcode', 'Organ'),
+    'description' = c('Sample ID, in the form SAMNxxxxxxxx',
+                      'Sample ID in GEO, in the form GSMxxxxxxx',
+                      'Library concentration in ng/ul',
+                      'RNA Integrity Number',
+                      'A260/A280 ratio indicating RNA purity',
+                      'The multiplexing barcode for the RNA sample',
+                      'Full name of the organ from which the RNA was isolated'),
+    'type' = c('character', 'character', 'numeric', 'numeric', 'numeric', 'character', 'character')
+)
+
+rownames(METAFIELDS) = METAFIELDS$name
+```
+
+```{r}
 # metadata = read.table(file.path(Sys.getenv('DBDIR'),
 #                                 'PRJNA238328_metadata.tsv'), sep = '\t', header = TRUE)
 meta1 = read.table(file.path(Sys.getenv('DBDIR'), file.metadata_sra), sep = '\t', header = TRUE)
@@ -83,7 +99,7 @@ tmp = meta1[,setdiff(colnames(meta1),c('RunId', 'Bases', 'Bytes', 'Lane', 'Avera
 meta1.bysample = meta1[!duplicated(tmp),colnames(tmp)]
 str(meta1.bysample)
 
-meta2 = read.table(file.path(Sys.getenv('DBDIR'), file.metadata_pub), sep = '\t', header = TRUE)[,c('Sample_ID', 'RNA_Sample_ID', 'ERCC_Mix', 'BarCode', 'RNA_A260.A280_Ratio', 'RNA_RIN' , 'Library_Con_ng.ul')]
+meta2 = read.table(file.path(Sys.getenv('DBDIR'), file.metadata_pub), sep = '\t', header = TRUE)[,c('Sample_ID', 'RNA_Sample_ID', 'ERCC_Mix', 'Barcode', 'RNA_A260.A280_Ratio', 'RNA_RIN' , 'Library_Con_ng.ul')]
 meta2$Sample_title = paste0('SEQC_',meta2$Sample_ID)
 meta2$Sample_ID <- NULL
 meta3 = readRDS(file.path(Sys.getenv('DBDIR'), file.metadata_geo))
@@ -101,7 +117,7 @@ meta4 = data.frame(t(starLog[,-c(1,2)])) %>%
     set_colnames(paste0('starAlignment.',starLog[[1]])) %>%
     set_rownames(colnames(starLog)[-c(1,2)])
 meta4$BiosampleId = rownames(meta4)
-str(meta4)
+# str(meta4)
 ```
 
 ```{r}
@@ -112,6 +128,13 @@ allMeta <- data.frame('BiosampleId' = libnames) %>%
     set_rownames(libnames)
 colDescription = colnames(allMeta)
 colDescription[grepl('starAlignment', colnames(allMeta))] = starLog[[2]]
+fields_with_description = which(colnames(allMeta) %in% names(METAFIELD_DESCRIPTION))
+colDescription[fields_with_description] = METAFIELDS[colDescription[fields_with_description], 'description']
+for (f in colnames(allMeta)) {
+    if(!is.na(METAFIELDS[f,'type'])) {
+        if (METAFIELDS[f,'type'] == 'numeric') allMeta[[f]] = as.numeric(allMeta[[f]])
+    }
+}
 phenoData <-
     Biobase::AnnotatedDataFrame(data = allMeta, varMetadata = data.frame('labelDescription' = colDescription, row.names = colnames(allMeta)))
 phenoData@varMetadata
